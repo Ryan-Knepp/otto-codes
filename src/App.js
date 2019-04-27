@@ -6,38 +6,6 @@ import Tabs from "./components/Tabs";
 import Tree from "./components/Tree";
 import github from "./apis/github";
 
-const data = {
-  name: "root",
-  toggled: true,
-  children: [
-    {
-      name: "parent",
-      children: [{ name: "child1" }, { name: "child2" }]
-    },
-    {
-      name: "loading parent",
-      loading: true,
-      children: []
-    },
-    {
-      name: "parent",
-      children: [
-        {
-          name: "nested parent",
-          children: [{ name: "nested child 1" }, { name: "nested child 2" }]
-        }
-      ]
-    }
-  ]
-};
-
-const fileData = [
-  { name: "src", id: 1 },
-  { name: "components", id: 2 },
-  { name: "index.js", id: 3 },
-  { name: "index.css", id: 4 }
-];
-
 const files = [
   { title: "File 1", active: true, id: 1 },
   { title: "File 2", active: false, id: 2 },
@@ -68,24 +36,37 @@ class App extends Component {
     this.state = {
       cursor: {},
       files: files,
-      repository: {},
-      code: atob(code.content)
+      openPath: [],
+      code: ""
     };
     this.editor = {};
+    this.repository = [];
     this.index = 0;
     this.github = new github();
-    this.github.InitRepo("facebook", "react");
+    this.github.InitRepo("Microsoft", "vscode");
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     document.addEventListener("keydown", this.replaceCharacter);
-    this.getRepository();
+    await this.getRepository();
+    await this.loadFile("src/vs/loader.js");
   }
 
   async getRepository() {
-    const data = await this.github.LoadFile("/packages/react/src/React.js");
-    console.log(data);
-    this.setState({ code: atob(data.data.content) });
+    const data = await this.github.LoadRepository();
+    this.repository = [
+      ...this.github.repository.folders,
+      ...this.github.repository.files
+    ];
+  }
+
+  async loadFile(path) {
+    const { content } = await this.github.LoadFile(path);
+    const openPath = path.split("/");
+    this.setState({
+      code: atob(content),
+      openPath: ["src", "vs", "loader.js"]
+    });
   }
 
   replaceCharacter = e => {
@@ -161,10 +142,12 @@ class App extends Component {
       automaticLayout: true
     };
 
+    const openPath = this.state.openPath;
+
     return (
       <div className="container">
         <div className="code-explorer">
-          <Tree nodes={fileData} />
+          <Tree nodes={this.repository} openPath={openPath} />
         </div>
         <div className="code-editor">
           <Tabs files={this.state.files} onClick={this.onTabClick} />
