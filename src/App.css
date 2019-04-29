@@ -4,13 +4,14 @@
 }
 
 .code-explorer {
-  width: 30%;
+  width: 20%;
   height: 100%;
+  overflow: auto;
 }
 
 .code-editor {
   height: 100%;
-  width: 70%;
+  width: 80%;
   display: flex;
   flex-direction: column;
 }

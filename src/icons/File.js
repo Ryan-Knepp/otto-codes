@@ -1,0 +1,24 @@
+import React from "react";
+
+const Icon = ({
+  style = {},
+  fill = "#42a5f5",
+  width = "100%",
+  className = ""
+}) => (
+  <svg
+    version="1.1"
+    style={style}
+    className={className}
+    width={width}
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="m13 9h5.5l-5.5-5.5v5.5m-7-7h8l6 6v12a2 2 0 0 1 -2 2h-12c-1.11 0-2-.9-2-2v-16c0-1.11.89-2 2-2m5 2h-5v16h5 7v-9h-7v-7z"
+      fill={fill}
+    />
+  </svg>
+);
+
+export default Icon;

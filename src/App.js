@@ -5,6 +5,7 @@ import "./App.css";
 import Tabs from "./components/Tabs";
 import Tree from "./components/Tree";
 import github from "./apis/github";
+import { Scrollbars } from "react-custom-scrollbars";
 
 const files = [
   { title: "File 1", active: true, id: 1 },
@@ -49,7 +50,7 @@ class App extends Component {
   async componentDidMount() {
     document.addEventListener("keydown", this.replaceCharacter);
     await this.getRepository();
-    await this.loadFile("src/vs/loader.js");
+    await this.loadFile("src/vs/editor/editor.api.ts");
   }
 
   async getRepository() {
@@ -63,9 +64,11 @@ class App extends Component {
   async loadFile(path) {
     const { content } = await this.github.LoadFile(path);
     const openPath = path.split("/");
+    const fileName = openPath.slice(-1)[0];
     this.setState({
       code: atob(content),
-      openPath: ["src", "vs", "loader.js"]
+      openPath: openPath,
+      files: [{ title: fileName, active: true, id: path }]
     });
   }
 
@@ -142,12 +145,14 @@ class App extends Component {
       automaticLayout: true
     };
 
-    const openPath = this.state.openPath;
+    const openPath = this.state.openPath.slice();
 
     return (
       <div className="container">
         <div className="code-explorer">
-          <Tree nodes={this.repository} openPath={openPath} />
+          <Scrollbars style={{ width: "100%", height: "100%" }}>
+            <Tree nodes={this.repository} openPath={openPath} />
+          </Scrollbars>
         </div>
         <div className="code-editor">
           <Tabs files={this.state.files} onClick={this.onTabClick} />
