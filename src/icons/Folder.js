@@ -2,7 +2,7 @@ import React from "react";
 
 const Icon = ({
   style = {},
-  fill = "#90a4ae",
+  fill = "#4caf50",
   width = "100%",
   className = ""
 }) => (

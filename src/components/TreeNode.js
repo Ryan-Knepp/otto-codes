@@ -3,19 +3,14 @@ import Tree from "./Tree";
 import "./TreeNode.css";
 import * as Icons from "../icons";
 
-const getFolderIcon = (name, isOpen) => {
-  switch (name) {
-    // case "src":
-    //   return isOpen ? Icons.SrcFolderOpen : Icons.SrcFolder
-    default:
-      return isOpen ? Icons.FolderOpen : Icons.Folder;
-  }
-};
-
 function TreeNode({ node, openPath }) {
+  const isOpened = openPath.length > 0 && openPath[0] === node.name;
+  const Icon =
+    node.type === "folder"
+      ? Icons.getFolderIcon(node.name, isOpened)
+      : Icons.getFileIcon(node.name);
+
   if (node.type === "folder") {
-    const isOpened = openPath.length > 0 && openPath[0] === node.name;
-    const Icon = getFolderIcon(node.name, isOpened);
     return (
       <li className="folder node">
         <div className="nodeDisplay">
@@ -32,10 +27,11 @@ function TreeNode({ node, openPath }) {
     );
   }
 
+  //show file icon
   return (
-    <li className="node">
+    <li className={`node ${isOpened ? "selected" : ""}`}>
       <div className="nodeDisplay">
-        <Icons.File width="16px" className="icon" />
+        <Icon width="16px" className="icon" />
         {node.name}
       </div>
     </li>

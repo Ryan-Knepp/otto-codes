@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --host 0.0.0.0 --mode development --open",
+    "start": "webpack-dev-server --mode development --open",
     "build": "webpack --mode production"
   },
   "eslintConfig": {
@@ -27,6 +27,8 @@
     "@babel/preset-react": "^7.0.0",
     "babel-loader": "^8.0.5",
     "css-loader": "^2.1.1",
+    "favicons-webpack-plugin": "0.0.9",
+    "file-loader": "^3.0.1",
     "html-webpack-plugin": "^3.2.0",
     "style-loader": "^0.23.1",
     "svg-inline-loader": "^0.8.0",
@@ -42,7 +44,6 @@
     "react": "^16.8.6",
     "react-custom-scrollbars": "^4.2.1",
     "react-dom": "^16.8.6",
-    "react-monaco-editor": "^0.25.1",
-    "react-treebeard": "^3.2.0"
+    "react-monaco-editor": "^0.25.1"
   }
 }

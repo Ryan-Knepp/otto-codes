@@ -1,3 +1,5 @@
 .folderContainer {
   padding-inline-start: 18px;
+  white-space: nowrap;
+  margin-block-start: 0;
 }

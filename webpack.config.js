@@ -1,6 +1,7 @@
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const path = require("path");
+const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 
 const htmlWebpackPlugin = new HtmlWebPackPlugin({
   template: "./public/index.html",
@@ -15,6 +16,15 @@ module.exports = {
   },
   module: {
     rules: [
+      {
+        test: /\.(png|jpe?g|gif)$/,
+        use: [
+          {
+            loader: "file-loader",
+            options: {}
+          }
+        ]
+      },
       {
         test: /\.js$/,
         exclude: /node_modules/,
@@ -32,5 +42,9 @@ module.exports = {
       }
     ]
   },
-  plugins: [htmlWebpackPlugin, new MonacoWebpackPlugin()]
+  plugins: [
+    htmlWebpackPlugin,
+    new MonacoWebpackPlugin(),
+    new FaviconsWebpackPlugin("./public/otto.png")
+  ]
 };
