@@ -36,11 +36,13 @@ class App extends Component {
   render() {
     return (
       <React.Fragment>
-        <Editor
-          repository={this.state.repository}
-          github={this.github}
-          canICode={this.state.canICode}
-        />
+        {this.state.repository ? (
+          <Editor
+            repository={this.state.repository}
+            github={this.github}
+            canICode={this.state.canICode}
+          />
+        ) : null}
         {!this.state.canICode ? <Welcome onGo={this.onNPMInstall} /> : null}
       </React.Fragment>
     );
