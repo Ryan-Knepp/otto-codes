@@ -55,7 +55,6 @@ class Editor extends Component {
   componentDidUpdate(prevProps) {
     if (!prevProps.canICode && this.props.canICode) {
       document.addEventListener("keydown", this.replaceCharacter);
-      document.addEventListener("mousedown", this.replaceCharacter);
     }
   }
 
@@ -69,10 +68,11 @@ class Editor extends Component {
     const { content } = await this.github.LoadFile(path);
     const openPath = path.split("/");
     const fileName = openPath.slice(-1)[0];
+    const currentTabs = this.state.tabs;
     this.setState({
       code: atob(content),
       openPath: openPath,
-      tabs: [{ title: fileName, active: true, id: path }],
+      tabs: [...currentTabs, { title: fileName, active: true, id: path }],
       fileName: fileName
     });
   }
