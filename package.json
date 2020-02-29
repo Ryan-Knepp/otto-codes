@@ -26,11 +26,13 @@
     "@babel/preset-env": "^7.8.6",
     "@babel/preset-react": "^7.8.3",
     "babel-loader": "^8.0.6",
-    "css-loader": "^2.1.1",
+    "css-loader": "^3.4.0",
     "favicons-webpack-plugin": "0.0.9",
-    "file-loader": "^3.0.1",
+    "file-loader": "^5.0.2",
     "html-webpack-plugin": "^3.2.0",
-    "style-loader": "^0.23.1",
+    "monaco-editor": "^0.20.0",
+    "monaco-editor-webpack-plugin": "^1.9.0",
+    "style-loader": "^1.1.1",
     "svg-inline-loader": "^0.8.2",
     "webpack": "^4.41.6",
     "webpack-cli": "^3.3.11",
@@ -39,11 +41,10 @@
   "dependencies": {
     "@babel/runtime": "^7.4.3",
     "axios": "^0.18.1",
-    "monaco-editor-webpack-plugin": "^1.7.0",
     "path": "^0.12.7",
     "react": "^16.8.6",
     "react-custom-scrollbars": "^4.2.1",
     "react-dom": "^16.8.6",
-    "react-monaco-editor": "^0.25.1"
+    "react-monaco-editor": "^0.34.0"
   }
 }
