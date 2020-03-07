@@ -35,7 +35,7 @@ class App extends Component {
 
   render() {
     return (
-      <React.Fragment>
+      <>
         {this.state.repository ? (
           <Editor
             repository={this.state.repository}
@@ -44,7 +44,7 @@ class App extends Component {
           />
         ) : null}
         {!this.state.canICode ? <Welcome onGo={this.onNPMInstall} /> : null}
-      </React.Fragment>
+      </>
     );
   }
 }
