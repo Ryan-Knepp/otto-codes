@@ -1,41 +1,50 @@
-import React from "react";
+import React, { Component, useState } from "react";
 import Tree from "./Tree";
 import "./TreeNode.css";
 import * as Icons from "../icons";
 
-function TreeNode({ node, openPath }) {
-  const isOpened = openPath.length > 0 && openPath[0] === node.name;
+function TreeNode({ node, onFileClick }) {
+  const toggleIsOpened = useNodeToggleState(node);
   const Icon =
     node.type === "folder"
-      ? Icons.getFolderIcon(node.name, isOpened)
+      ? Icons.getFolderIcon(node.name, node.isOpen)
       : Icons.getFileIcon(node.name);
 
+  //show file icon
   if (node.type === "folder") {
     return (
       <li className="folder node">
-        <div className="nodeDisplay">
-          <Icon width="16px" className="icon" />
+        <div className="nodeDisplay" onClick={() => toggleIsOpened()}>
+          {Icon && <Icon width="16px" className="icon" />}
           {node.name}
         </div>
-        {isOpened ? (
+        {node.isOpen ? (
           <Tree
             nodes={[...node.folders, ...node.files]}
-            openPath={openPath.slice(1)}
+            onNodeClick={onFileClick}
           />
         ) : null}
       </li>
     );
   }
 
-  //show file icon
   return (
-    <li className={`node ${isOpened ? "selected" : ""}`}>
-      <div className="nodeDisplay">
-        <Icon width="16px" className="icon" />
+    <li className={`node ${node.isOpen ? "selected" : ""}`}>
+      <div className="nodeDisplay" onClick={() => onFileClick(node.path)}>
+        {Icon && <Icon width="16px" className="icon" />}
         {node.name}
       </div>
     </li>
   );
 }
+
+const useNodeToggleState = node => {
+  const [isOpen, setIsOpen] = useState(node.isOpen);
+  const toggleNodeIsOpen = () => {
+    node.isOpen = !node.isOpen;
+    setIsOpen(node.isOpen);
+  };
+  return toggleNodeIsOpen;
+};
 
 export default TreeNode;

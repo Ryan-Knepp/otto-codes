@@ -1,13 +1,14 @@
 import React from "react";
 import "./Tree.css";
-import "./TreeNode";
 import TreeNode from "./TreeNode";
 
-function Tree({ nodes, openPath }) {
+function Tree({ nodes, onNodeClick }) {
   return (
     <ul className="folderContainer">
       {nodes.map(node => {
-        return <TreeNode key={node.path} node={node} openPath={openPath} />;
+        return (
+          <TreeNode key={node.path} node={node} onFileClick={onNodeClick} />
+        );
       })}
     </ul>
   );

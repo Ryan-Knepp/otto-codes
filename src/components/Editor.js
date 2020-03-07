@@ -68,12 +68,46 @@ class Editor extends Component {
     const { content } = await this.github.LoadFile(path);
     const openPath = path.split("/");
     const fileName = openPath.slice(-1)[0];
-    const currentTabs = this.state.tabs;
+    let alreadInTabs = false;
+    const newTabs = this.state.tabs.map(tab => {
+      if (tab.id === path) {
+        alreadInTabs = true;
+      }
+      return {
+        ...tab,
+        active: tab.id === path
+      };
+    });
+    if (!alreadInTabs) {
+      newTabs.push({ title: fileName, active: true, id: path });
+    }
+
+    if (this.editor) {
+    }
+
     this.setState({
       code: atob(content),
       openPath: openPath,
-      tabs: [...currentTabs, { title: fileName, active: true, id: path }],
+      tabs: newTabs,
       fileName: fileName
+    });
+  }
+
+  async onTreeNodeClick(path) {
+    if (path.includes(".")) {
+      await this.loadCodeFromFile(path);
+    }
+  }
+
+  onTabClick(id) {
+    const newTabs = this.state.tabs.map(tab => {
+      return {
+        ...tab,
+        active: tab.id === id
+      };
+    });
+    this.setState({
+      tabs: newTabs
     });
   }
 
@@ -86,8 +120,8 @@ class Editor extends Component {
     e.preventDefault();
     if (this.editor) {
       this.editor.focus();
-      var line = this.editor.getPosition();
-      var range = new this.monaco.Range(
+      let line = this.editor.getPosition();
+      let range = new this.monaco.Range(
         line.lineNumber,
         line.column,
         line.lineNumber,
@@ -159,18 +193,19 @@ class Editor extends Component {
       automaticLayout: true
     };
 
-    const openPath = this.state.openPath.slice();
-
     return (
       <div className="container">
         <div className="code-explorer">
           <Scrollbars style={{ width: "100%", height: "100%" }}>
             <h2>Otto Codes</h2>
-            <Tree nodes={this.props.repository} openPath={openPath} />
+            <Tree
+              nodes={this.props.repository}
+              onNodeClick={path => this.onTreeNodeClick(path)}
+            />
           </Scrollbars>
         </div>
         <div className="code-editor">
-          <Tabs tabs={this.state.tabs} />
+          <Tabs tabs={this.state.tabs} onClick={id => this.onTabClick(id)} />
           <MonacoEditor
             language={this.getFileLanguage(this.state.fileName)}
             theme="vs-dark"

@@ -1,4 +1,5 @@
 .tab-list {
+  display: flex;
   padding-left: 0;
   margin-block-start: 0;
   margin-block-end: 0;
