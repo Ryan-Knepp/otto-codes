@@ -34,9 +34,7 @@ class github {
    * @memberof github
    */
   _getRecursiveTreeURL() {
-    return `${this.owner}/${this.repoName}/git/trees/${
-      this.repoSha
-    }?recursive=1`;
+    return `${this.owner}/${this.repoName}/git/trees/${this.repoSha}?recursive=1`;
   }
 
   /**
@@ -60,8 +58,17 @@ class github {
    */
   LoadFile(path) {
     return new Promise(async (resolve, reject) => {
+      if (localStorage) {
+        const data = JSON.parse(localStorage.getItem(`file:${path}`));
+        if (data) {
+          resolve(data);
+        }
+      }
       const { data } = await this.fetcher.get(this._getFileURL(path));
       if (data) {
+        if (localStorage) {
+          localStorage.setItem(`file:${path}`, JSON.stringify(data));
+        }
         resolve(data);
       } else {
         reject(Error("Failed to get file"));
@@ -95,6 +102,14 @@ class github {
    */
   LoadRepository() {
     return new Promise(async (resolve, reject) => {
+      if (localStorage) {
+        const repo = JSON.parse(localStorage.getItem("repo"));
+        if (repo) {
+          this.repository = repo;
+          resolve(true);
+          return;
+        }
+      }
       if (!this.repoSha) await this.LoadRepoHead();
       if (this.repoSha) {
         const { data } = await this.fetcher.get(
@@ -122,6 +137,9 @@ class github {
               parentTree[0].files = [...parentTree[0].files, file];
             }
           });
+          if (localStorage) {
+            localStorage.setItem("repo", JSON.stringify(this.repository));
+          }
           resolve(true);
         } else {
           reject(Error("Repository has no data"));
@@ -166,7 +184,8 @@ class github {
       sha: sha,
       type: "folder",
       folders: [],
-      files: []
+      files: [],
+      isOpen: false
     };
   }
 
@@ -184,7 +203,8 @@ class github {
       name: name,
       path: path,
       sha: sha,
-      type: "file"
+      type: "file",
+      isOpen: false
     };
   }
 }
