@@ -8,7 +8,7 @@ class App extends Component {
     super(props);
     this.state = {
       canICode: false,
-      repository: []
+      isRepoLoaded: false,
     };
     this.github = new github("Microsoft", "vscode");
   }
@@ -21,29 +21,22 @@ class App extends Component {
     const success = await this.github.LoadRepository();
     if (success) {
       this.setState({
-        repository: [
-          ...this.github.repository.folders,
-          ...this.github.repository.files
-        ]
+        isRepoLoaded: true,
       });
     }
   }
 
-  onNPMInstall = () => {
+  startCoding = () => {
     this.setState({ canICode: true });
   };
 
   render() {
     return (
       <>
-        {this.state.repository ? (
-          <Editor
-            repository={this.state.repository}
-            github={this.github}
-            canICode={this.state.canICode}
-          />
+        {this.state.isRepoLoaded ? (
+          <Editor repoHandler={this.github} canICode={this.state.canICode} />
         ) : null}
-        {!this.state.canICode ? <Welcome onGo={this.onNPMInstall} /> : null}
+        {!this.state.canICode ? <Welcome onGo={this.startCoding} /> : null}
       </>
     );
   }

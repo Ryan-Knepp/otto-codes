@@ -1,49 +1,50 @@
 import React, { Component } from "react";
 import MonacoEditor from "react-monaco-editor";
-import "./Editor.css";
 import Tabs from "./Tabs";
 import Tree from "./Tree";
 import { Scrollbars } from "react-custom-scrollbars";
+import "./Editor.css";
 
-// eslint-disable-next-line no-undef
-const KeyCode = monaco.KeyCode;
-const preventKeyCodes = [
-  KeyCode.F1,
-  KeyCode.F2,
-  KeyCode.F3,
-  KeyCode.F4,
-  KeyCode.F5,
-  KeyCode.F6,
-  KeyCode.F7,
-  KeyCode.F8,
-  KeyCode.F9,
-  KeyCode.F10,
-  KeyCode.F11,
-  KeyCode.F12,
-  KeyCode.Tab
-];
+import EditorController from "../controllers/EditorController";
+import { getFileLanguage } from "../utils/helpers";
 
 class Editor extends Component {
   constructor(props) {
     super(props);
     this.state = {
       tabs: [],
-      openPath: [],
-      code: "",
-      fileName: ""
+      openPath: "",
+      fileName: "",
     };
-    this.editor = {};
-    this.index = 0;
-    this.github = props.github;
+    this.repository = [
+      ...props.repoHandler.repository.folders,
+      ...props.repoHandler.repository.files,
+    ];
+    this.editorController = new EditorController(props.repoHandler);
   }
 
   /**
-   * Load the file from Github
+   * Load the file from repository
    *
    * @memberof Editor
    */
   async componentDidMount() {
-    await this.loadCodeFromFile("src/vs/editor/editor.api.ts");
+    const path = "src/vs/editor/editor.api.ts";
+    await this.editorController.setCurrentCode(path);
+    this.openToPath(path);
+    this.addTabForPath(path);
+  }
+
+  openToPath(path) {
+    const openPath = path.split("/").slice(0, -1);
+    let currentFolder = this.repository;
+    openPath.forEach((pathPiece) => {
+      currentFolder = currentFolder.find((folder) => folder.name === pathPiece);
+      if (currentFolder) {
+        currentFolder.isOpen = true;
+        currentFolder = currentFolder.folders;
+      }
+    });
   }
 
   /**
@@ -58,56 +59,49 @@ class Editor extends Component {
     }
   }
 
-  /**
-   * Helper function that loads a file from the github api
-   *
-   * @param {string} path file path to load
-   * @memberof Editor
-   */
-  async loadCodeFromFile(path) {
-    const { content } = await this.github.LoadFile(path);
-    const openPath = path.split("/");
-    const fileName = openPath.slice(-1)[0];
+  async onTreeNodeClick(path) {
+    if (path.includes(".")) {
+      await this.editorController.setCurrentCode(path);
+      this.editorController.clearEditor();
+      this.addTabForPath(path);
+    }
+  }
+
+  addTabForPath(path) {
+    const fileName = path.split("/").slice(-1)[0];
     let alreadInTabs = false;
-    const newTabs = this.state.tabs.map(tab => {
+    const newTabs = this.state.tabs.map((tab) => {
       if (tab.id === path) {
         alreadInTabs = true;
       }
       return {
         ...tab,
-        active: tab.id === path
+        active: tab.id === path,
       };
     });
     if (!alreadInTabs) {
       newTabs.push({ title: fileName, active: true, id: path });
     }
-
-    if (this.editor) {
-    }
-
     this.setState({
-      code: atob(content),
-      openPath: openPath,
+      openPath: path,
       tabs: newTabs,
-      fileName: fileName
+      fileName: fileName,
     });
   }
 
-  async onTreeNodeClick(path) {
-    if (path.includes(".")) {
-      await this.loadCodeFromFile(path);
-    }
-  }
-
-  onTabClick(id) {
-    const newTabs = this.state.tabs.map(tab => {
+  async onTabClick(id) {
+    const newTabs = this.state.tabs.map((tab) => {
       return {
         ...tab,
-        active: tab.id === id
+        active: tab.id === id,
       };
     });
+    await this.editorController.setCurrentCode(id);
+    this.editorController.clearEditor();
+    this.openToPath(id);
     this.setState({
-      tabs: newTabs
+      openPath: id,
+      tabs: newTabs,
     });
   }
 
@@ -116,32 +110,9 @@ class Editor extends Component {
    *
    * @memberof Editor
    */
-  replaceCharacter = e => {
+  replaceCharacter = (e) => {
     e.preventDefault();
-    if (this.editor) {
-      this.editor.focus();
-      let line = this.editor.getPosition();
-      let range = new this.monaco.Range(
-        line.lineNumber,
-        line.column,
-        line.lineNumber,
-        line.column
-      );
-
-      const newCode = this.state.code.slice(this.index, this.index + 3);
-      this.index += 3;
-      const text =
-        newCode.charCodeAt(4) === 13
-          ? newCode + this.state.code.charAt(this.index++)
-          : newCode;
-      const op = {
-        text: text,
-        range: range,
-        forceMoveMarkers: true
-      };
-      this.editor.executeEdits("ottoCodes", [op]);
-      this.editor.revealLineInCenterIfOutsideViewport(line.lineNumber, 0);
-    }
+    this.editorController.addCodeToEditor();
   };
 
   /**
@@ -151,46 +122,13 @@ class Editor extends Component {
    */
   editorDidMount = (editor, monaco) => {
     editor.focus();
-    this.editor = editor;
-    this.monaco = monaco;
-    this.preventDefaultMonaco(this.editor);
+    this.editorController.setEditor(editor, monaco);
   };
-
-  /**
-   * Clear out default key commands, so replaceCharacter will handle them
-   *
-   * @param {object} editor the monaco editor reference
-   * @memberof Editor
-   */
-  preventDefaultMonaco(editor) {
-    preventKeyCodes.forEach(keyCode => {
-      editor.addCommand(keyCode, null);
-    });
-  }
-
-  /**
-   * Takes in a filename and returns the programming language
-   *
-   * @param {string} [fileName=""] filename to check
-   * @returns {string} programming language of the file
-   * @memberof Editor
-   */
-  getFileLanguage(fileName = "") {
-    if (/.ts$/.test(fileName)) {
-      return "typescript";
-    }
-    if (/.json$/.test(fileName)) {
-      return "json";
-    }
-
-    //default to javascript
-    return "javascript";
-  }
 
   render() {
     const options = {
       selectOnLineNumbers: true,
-      automaticLayout: true
+      automaticLayout: true,
     };
 
     return (
@@ -199,15 +137,15 @@ class Editor extends Component {
           <Scrollbars style={{ width: "100%", height: "100%" }}>
             <h2>Otto Codes</h2>
             <Tree
-              nodes={this.props.repository}
-              onNodeClick={path => this.onTreeNodeClick(path)}
+              nodes={this.repository}
+              onNodeClick={(path) => this.onTreeNodeClick(path)}
             />
           </Scrollbars>
         </div>
         <div className="code-editor">
-          <Tabs tabs={this.state.tabs} onClick={id => this.onTabClick(id)} />
+          <Tabs tabs={this.state.tabs} onClick={(id) => this.onTabClick(id)} />
           <MonacoEditor
-            language={this.getFileLanguage(this.state.fileName)}
+            language={getFileLanguage(this.state.fileName)}
             theme="vs-dark"
             options={options}
             editorDidMount={this.editorDidMount}

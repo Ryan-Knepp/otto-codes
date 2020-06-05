@@ -1,4 +1,4 @@
-import React, { Component, useState } from "react";
+import React, { useState } from "react";
 import Tree from "./Tree";
 import "./TreeNode.css";
 import * as Icons from "../icons";

@@ -8,7 +8,7 @@ import axios from "axios";
 class github {
   constructor(owner, repoName) {
     this.fetcher = axios.create({
-      baseURL: "https://api.github.com/repos/"
+      baseURL: "https://api.github.com/repos/",
     });
     this.owner = owner;
     this.repoName = repoName;
@@ -49,6 +49,28 @@ class github {
   }
 
   /**
+   * Load an item from local storage
+   *
+   * @param {string} item the item name to load
+   * @returns the JSON object for the given item if it exists. Otherwise it returns null
+   * @memberof github
+   */
+  _loadFromLocalStorage(item) {
+    try {
+      if (localStorage) {
+        const data = JSON.parse(localStorage.getItem(item));
+        if (data) {
+          return data;
+        }
+      }
+    } catch (error) {
+      return null;
+    }
+
+    return null;
+  }
+
+  /**
    * Load a single file from the repository
    *
    * @param {string} path the relative path of the file to load
@@ -58,17 +80,8 @@ class github {
    */
   LoadFile(path) {
     return new Promise(async (resolve, reject) => {
-      if (localStorage) {
-        const data = JSON.parse(localStorage.getItem(`file:${path}`));
-        if (data) {
-          resolve(data);
-        }
-      }
       const { data } = await this.fetcher.get(this._getFileURL(path));
       if (data) {
-        if (localStorage) {
-          localStorage.setItem(`file:${path}`, JSON.stringify(data));
-        }
         resolve(data);
       } else {
         reject(Error("Failed to get file"));
@@ -102,44 +115,21 @@ class github {
    */
   LoadRepository() {
     return new Promise(async (resolve, reject) => {
-      if (localStorage) {
-        const repo = JSON.parse(localStorage.getItem("repo"));
-        if (repo) {
-          this.repository = repo;
-          resolve(true);
-          return;
-        }
+      const localStorageData = this._loadFromLocalStorage("repo");
+      if (localStorageData) {
+        this.repository = localStorageData;
+        resolve(true);
+        return;
       }
+
       if (!this.repoSha) await this.LoadRepoHead();
+
       if (this.repoSha) {
         const { data } = await this.fetcher.get(
           this._getRecursiveTreeURL(this.repoSha)
         );
         if (data) {
-          this.repository = this.createFolder(this.repoName, "", this.repoSha);
-          let parentTree = [this.repository];
-          data.tree.forEach(node => {
-            parentTree = this.getParentDirectory(parentTree, node.path);
-            if (node.type === "tree") {
-              const folder = this.createFolder(
-                node.path.split("/").pop(),
-                node.path,
-                node.sha
-              );
-              parentTree[0].folders = [...parentTree[0].folders, folder];
-              parentTree = [folder, ...parentTree];
-            } else {
-              const file = this.createFile(
-                node.path.split("/").pop(),
-                node.path,
-                node.sha
-              );
-              parentTree[0].files = [...parentTree[0].files, file];
-            }
-          });
-          if (localStorage) {
-            localStorage.setItem("repo", JSON.stringify(this.repository));
-          }
+          this.convertToRepository(data);
           resolve(true);
         } else {
           reject(Error("Repository has no data"));
@@ -148,6 +138,43 @@ class github {
         reject(Error("Can't find repository"));
       }
     });
+  }
+
+  /**
+   * Convert the flat JSON object returned by the Github API to the class repository representation
+   *
+   * @param {object} data JSON object returned by Github API
+   * @memberof github
+   */
+  convertToRepository(data) {
+    this.repository = this.createFolder(this.repoName, "", this.repoSha);
+    let parentTree = [this.repository];
+    data.tree.forEach((node) => {
+      parentTree = this.getParentDirectory(parentTree, node.path);
+      if (node.type === "tree") {
+        const folder = this.createFolder(
+          node.path.split("/").pop(),
+          node.path,
+          node.sha
+        );
+        parentTree[0].folders = [...parentTree[0].folders, folder];
+        parentTree = [folder, ...parentTree];
+      } else {
+        const file = this.createFile(
+          node.path.split("/").pop(),
+          node.path,
+          node.sha
+        );
+        parentTree[0].files = [...parentTree[0].files, file];
+      }
+    });
+    try {
+      if (localStorage) {
+        localStorage.setItem("repo", JSON.stringify(this.repository));
+      }
+    } catch (error) {
+      return;
+    }
   }
 
   /**
@@ -185,7 +212,7 @@ class github {
       type: "folder",
       folders: [],
       files: [],
-      isOpen: false
+      isOpen: false,
     };
   }
 
@@ -204,7 +231,7 @@ class github {
       path: path,
       sha: sha,
       type: "file",
-      isOpen: false
+      isOpen: false,
     };
   }
 }
